@@ -7,8 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,18 +19,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,14 +49,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val configuration = LocalConfiguration.current
-            val isPortrait = configuration.orientation
-            Box() {
-                if (isPortrait == Configuration.ORIENTATION_PORTRAIT) {
-                    PortraitView()
-                } else {
-                    LandScapeView()
-                }
-            }
+            val isPortrait = configuration.orientation== Configuration.ORIENTATION_PORTRAIT
+            val showAlertDialog = remember { mutableStateOf(false) }
+
+            MainView(showAlertDialog,isPortrait)
 
         }
 
@@ -64,94 +61,19 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun PortraitView() {
-
-    AlertDialog(
-        onDismissRequest = {},
-        title = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Card(
-                    shape = CircleShape,
-                    border = BorderStroke(2.dp, Color.Black),
-                    modifier = Modifier
-                        .width(150.dp)
-                        .height(150.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "profile", contentScale = ContentScale.Crop
-                    )
-                }
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    "Student ID : w1871523",
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif,
-                    fontSize = 18.sp
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    "Name : Avishka Pramuditha",
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif,
-                    fontSize = 18.sp
-                )
-            }
-        },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "I confirm that I understand what plagiarism is and have read and understood the section on Assessment Offences in the Essential Information for Students. The work that I have submitted is entirely my own. Any work from other authors is duly referenced and acknowledged.",
-                    fontFamily = FontFamily.Serif,
-                    fontSize = 15.sp,
-                    style = TextStyle(
-                        textAlign = TextAlign.Justify
-                    )
-                )
-
-
-            }
-
-        },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                ElevatedButton(onClick = {}, elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp), colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White,
-                    containerColor = Color(0xFF067EBF)
-                ),
-                ) {
-                    Text(
-                        "Done",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Serif,
-                        fontSize = 18.sp
-                    )
-
-                }
-            }
-
-        }, modifier = Modifier.padding(bottom = 15.dp)
-    )
-
-
-
-
-
-
-
-
+fun MainView(showAlertDialog: MutableState<Boolean>, isPortrait: Boolean) {
+    About(showAlertDialog,isPortrait)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 150.dp)
+            .padding(top = if (isPortrait) 150.dp else 20.dp).then(if (showAlertDialog.value) Modifier.blur(7.dp)else Modifier)
     ) {
         Image(
             painter = painterResource(id = R.drawable.main_dice),
             contentDescription = "main dice",
             modifier = Modifier
-                .width(350.dp)
-                .height(350.dp)
+                .size(if (isPortrait) 350.dp else 150.dp)
                 .padding(start = 15.dp)
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -163,48 +85,13 @@ fun PortraitView() {
             fontSize = 20.sp
         )
 
-        Spacer(modifier = Modifier.height(50.dp))
-        ButtonSection()
-        Spacer(modifier = Modifier.weight(1f))
-        Setting()
+        Spacer(modifier = Modifier.height(if(isPortrait)50.dp else 25.dp))
+        ButtonSection(showAlertDialog)
     }
 }
 
 @Composable
-fun LandScapeView() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 20.dp)//.background(Color.Blue)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.main_dice),
-            contentDescription = "main dice",
-            modifier = Modifier
-                .width(150.dp)
-                .height(150.dp)
-                .padding(start = 15.dp)
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Text(
-            text = "Let the Dice Decide Your Fate...!",
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Serif,
-            fontSize = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(25.dp))
-        ButtonSection()
-        Spacer(modifier = Modifier.weight(0.5f))
-        Setting()
-    }
-}
-
-@Composable
-fun ButtonSection() {
-
+fun ButtonSection(showAlertDialog: MutableState<Boolean>) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -230,7 +117,7 @@ fun ButtonSection() {
         Spacer(modifier = Modifier.height(25.dp))
         ElevatedButton(
             onClick = {
-
+            showAlertDialog.value=true
             },
             colors = ButtonDefaults.buttonColors(
                 contentColor = Color.White,
@@ -253,40 +140,81 @@ fun ButtonSection() {
 }
 
 @Composable
-fun Setting() {
+fun About(showAlertDialog: MutableState<Boolean>, isPortrait: Boolean) {
 
-    Row(
-        horizontalArrangement = Arrangement.End,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-    ) {
+    if(showAlertDialog.value){
+        AlertDialog(
+            onDismissRequest = {showAlertDialog.value=false},
+            title = {
+                Column( modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Card(
+                        shape = CircleShape,
+                        border = BorderStroke(2.dp, Color.Black),
+                        modifier = Modifier
+                            .size(if (isPortrait)150.dp else 90.dp)
 
-        IconButton(
-            onClick = {}, modifier = Modifier
-                .size(40.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.profile),
+                            contentDescription = "profile", contentScale = ContentScale.Crop
+                        )
+                    }
+                    if(isPortrait){
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                    Text(
+                        "Student ID : w1871523",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Serif,
+                        fontSize = if (isPortrait) 18.sp else 12.sp
+                    )
+                    if(isPortrait){
+                        Spacer(modifier = Modifier.height(5.dp ))
+                    }
+                    Text(
+                        "Name : Avishka Pramuditha",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Serif,
+                        fontSize = if (isPortrait) 18.sp else 12.sp
+                    )
+                }
+            },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "I confirm that I understand what plagiarism is and have read and understood the section on Assessment Offences in the Essential Information for Students. The work that I have submitted is entirely my own. Any work from other authors is duly referenced and acknowledged.",
+                        fontFamily = FontFamily.Serif,
+                        fontSize = if (isPortrait) 15.sp else 10.sp ,
+                        style = TextStyle(
+                            textAlign = TextAlign.Justify
+                        )
+                    )
 
-        ) {
-            Icon(
-                Icons.Default.Settings,
-                contentDescription = "Setting",
-                Modifier
-                    .size(40.dp)
-            )
-        }
+
+                }
+
+            },
+            confirmButton = {
+                Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                    ElevatedButton(onClick = {showAlertDialog.value=false},elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp), colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Color(0xFF067EBF)
+                    ),
+                    ) {
+                        Text(
+                            "Done",
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif,
+                            fontSize = if (isPortrait) 18.sp else 13.sp,
+                        )
+
+                    }
+                }
+
+            }, modifier = Modifier.padding(bottom = 15.dp,top = if(isPortrait)0.dp else 5.dp )
+                .width(if(isPortrait) 350.dp else 400.dp),properties = DialogProperties(usePlatformDefaultWidth = false)
+        )
     }
 
 }
 
-@Composable
-fun About(show: Boolean) {
-
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text("fgsdgdfhdfgdfgdgdgdfg") },
-        text = {
-            Text("gdfgsgsdg")
-        },
-        confirmButton = {}
-    )
-}
