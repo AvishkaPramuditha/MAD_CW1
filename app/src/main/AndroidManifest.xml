@@ -16,6 +16,12 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:theme="@style/Theme.W1871523_MAD_CW1"/>
+
+        <activity
+            android:name=".GamePlayActivity"
+            android:exported="true"
+            android:label="@string/app_name"
             android:theme="@style/Theme.W1871523_MAD_CW1">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

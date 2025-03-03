@@ -1,5 +1,6 @@
 package com.example.w1871523_mad_cw1
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -91,12 +93,15 @@ fun MainView(showAlertDialog: MutableState<Boolean>, isPortrait: Boolean) {
 
 @Composable
 fun ButtonSection(showAlertDialog: MutableState<Boolean>) {
-
+    val context=LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ElevatedButton(
-            onClick = {},
+            onClick = {
+                val intent = Intent(context, GamePlayActivity::class.java)
+                context.startActivity(intent)
+            },
             colors = ButtonDefaults.buttonColors(
                 contentColor = Color.White,
                 containerColor = Color(0xFF067EBF)
