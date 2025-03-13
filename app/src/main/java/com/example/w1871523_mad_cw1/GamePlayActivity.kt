@@ -1,10 +1,18 @@
 package com.example.w1871523_mad_cw1
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.Configuration
+import android.graphics.drawable.AnimatedImageDrawable
 import android.os.Bundle
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,44 +21,79 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.w1871523_mad_cw1.viewModel.GamePlayViewModel
+
+////
+import android.graphics.drawable.Drawable
+import android.media.MediaPlayer
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.nativeCanvas
+
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.content.res.ResourcesCompat
+import kotlinx.coroutines.delay
+
+
 
 class GamePlayActivity : ComponentActivity() {
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MainView()
+            val viewModel: GamePlayViewModel = viewModel()
+            MainView(viewModel)
         }
 
     }
 }
 
 @Composable
-fun MainView() {
-    Box{
+fun MainView(viewModel: GamePlayViewModel) {
+    SetTarget(viewModel)
+    Box {
         Image(
             painter = painterResource(id = R.drawable.play_background),
             contentDescription = "background",
@@ -58,18 +101,29 @@ fun MainView() {
             modifier = Modifier.fillMaxSize()
         )
 
-        ScoreBoard()
+        Column(
+            modifier = Modifier
+                .padding(top = 60.dp, end = 15.dp, start = 15.dp)
+                .fillMaxSize()
+        ) {
+            ScoreBoard(viewModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            Rolling(viewModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            ButtonSection(viewModel)
+        }
+
     }
 
 }
 
 @Composable
-fun ScoreBoard() {
+fun ScoreBoard(viewModel: GamePlayViewModel) {
     Card(
         modifier = Modifier
-            .height(240.dp)
-            .fillMaxWidth()
-            .padding(top = 60.dp, end = 15.dp, start = 15.dp), shape = RoundedCornerShape(20.dp)
+            .height(180.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp), elevation = CardDefaults.elevatedCardElevation(10.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
@@ -87,7 +141,7 @@ fun ScoreBoard() {
             ) {
                 Card(
                     modifier = Modifier
-                        .height(180.dp)
+                        .height(150.dp)
                         .width(215.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB)),
                     shape = RoundedCornerShape(20.dp)
@@ -127,11 +181,11 @@ fun ScoreBoard() {
                         }
 
                         Text(
-                            "You : 0    /    Bot : 0",
+                            "You : ${viewModel.playerWon.value}    /    Bot : ${viewModel.computerWon.value}",
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            modifier = Modifier.padding(bottom = 25.dp)
+                            modifier = Modifier.padding(bottom = 18.dp)
                         )
                     }
                 }
@@ -169,7 +223,7 @@ fun ScoreBoard() {
                                     tint = Color(0xFF01497C)
                                 )
                                 Text(
-                                    ": 000", fontSize = 25.sp,
+                                    ": ${viewModel.playerScore.value}", fontSize = 25.sp,
                                     fontWeight = FontWeight.Bold,
 
                                     )
@@ -187,8 +241,9 @@ fun ScoreBoard() {
                                     modifier = Modifier.size(39.dp)
                                 )
                                 Text(
-                                    ": 000", fontSize = 25.sp,
+                                    ": ${viewModel.computerScore.value}", fontSize = 25.sp,
                                     fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 5.dp)
                                 )
                             }
                         }
@@ -210,7 +265,11 @@ fun ScoreBoard() {
                                 modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("101", fontWeight = FontWeight.Bold, fontSize = 25.sp)
+                            Text(
+                                "${viewModel.target.value}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 25.sp
+                            )
 
                         }
                     }
@@ -221,3 +280,326 @@ fun ScoreBoard() {
         }
     }
 }
+
+@Composable
+fun Rolling(viewModel: GamePlayViewModel) {
+
+    val diceImages = listOf(
+        R.drawable.dice1,
+        R.drawable.dice2,
+        R.drawable.dice3,
+        R.drawable.dice4,
+        R.drawable.dice5,
+        R.drawable.dice6
+    )
+
+    Card(
+        modifier = Modifier
+            .height(460.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.elevatedCardElevation(10.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.rolling_background),
+                contentScale = ContentScale.Crop,
+                contentDescription = "rolling background"
+            )
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = 10.dp,
+                        bottom = 10.dp,
+                        start = 15.dp,
+                        end = 15.dp
+                    )
+            ) {
+                Text(
+                    "The Opponent",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                DiceSet(diceImages, viewModel, false)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if(viewModel.showAnimation.value){RollingAnimation()}else{
+                    Spacer(modifier = Modifier.size(220.dp))
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    if (viewModel.showSelection.value) "Select Dice To Keep" else "",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color(0xFFEEEDEB)
+                )
+
+                Spacer(modifier = Modifier.height(5.dp))
+                DiceSet(diceImages, viewModel, true)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    "You",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+        }
+    }
+}
+
+
+@Composable
+fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) {
+    val diceValues =
+        if (user) viewModel.playerDiceValues.value else viewModel.computerDiceValues.value
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        for ((index, dice) in diceValues.withIndex()) {
+
+            Box(
+                modifier = Modifier
+                    .size(55.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .border(
+                        width = if (user && index in viewModel.playerSelectedDices.value) 4.dp else 0.dp,
+                        color = if (user && index in viewModel.playerSelectedDices.value) Color.Green else Color.Transparent,
+                        shape = RoundedCornerShape(15.dp)
+                    )
+                    .clickable(enabled = user && viewModel.showSelection.value) {
+                        if (index in viewModel.playerSelectedDices.value) {
+                            viewModel.removeSelectedDice(index)
+                        } else {
+                            viewModel.selectDice(index)
+                        }
+                    }
+            ) {
+                if (viewModel.showDice.value) {
+                    Image(
+                        painter = painterResource(id = diceImages[dice - 1]),
+                        contentScale = ContentScale.Crop,
+                        contentDescription = "DICE1",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+            }
+        }
+
+    }
+}
+
+@Composable
+fun ButtonSection(viewModel: GamePlayViewModel) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        ElevatedButton(
+            onClick = {
+               // viewModel.throwPlayerDices()
+                playRollingSound(context)
+                viewModel.throwDices()
+            },
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Color.White,
+                containerColor = Color(0xFF067EBF)
+            ),
+            modifier = Modifier
+                .height(50.dp)
+                .width(180.dp),
+            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
+            shape = RoundedCornerShape(20.dp),
+
+            ) {
+
+            Text(
+                text = viewModel.buttonName.value,
+                fontSize = 20.sp,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        ElevatedButton(
+            onClick = {
+                viewModel.scoreTotal()
+            }, colors = ButtonDefaults.buttonColors(
+                contentColor = Color.White,
+                containerColor = Color(0xFF067EBF)
+            ),
+            modifier = Modifier
+                .height(50.dp)
+                .width(150.dp),
+            elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
+            shape = RoundedCornerShape(20.dp),
+            enabled = viewModel.showDice.value && viewModel.playerSelectedDices.value.isEmpty()
+        ) {
+
+            Text(
+                "Score",
+                fontSize = 20.sp,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+    }
+}
+
+@Composable
+fun SetTarget(viewModel: GamePlayViewModel) {
+    var showAlert: Boolean by remember { mutableStateOf(false) }
+    var target by remember { mutableStateOf("101") }
+
+    if (showAlert) {
+        AlertDialog(
+            containerColor = Color.White,
+            onDismissRequest = { showAlert = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Set Target", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(15.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.target_icon),
+                        contentDescription = "target",
+                        tint = Color.Red,
+                        modifier = Modifier.size(25.dp)
+                    )
+                }
+
+            },
+
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    OutlinedTextField(
+                        value = target,
+                        onValueChange = { target = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(51.dp)
+                            .shadow(5.dp, RoundedCornerShape(20.dp)),
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedTextColor = Color.Black,
+                            focusedIndicatorColor = Color(0xFF067EBF),
+                            unfocusedIndicatorColor = Color(0xFF067EBF),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        textStyle = TextStyle(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+
+
+                            )
+                    )
+
+
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    ElevatedButton(
+                        onClick = {
+                            viewModel.setTarget(target.toInt())
+                            showAlert = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Color(0xFF067EBF)
+                        ),
+                        modifier = Modifier
+                            .height(40.dp)
+                            .width(100.dp),
+                        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(20.dp),
+
+                        ) {
+
+                        Text(
+                            "Done",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+            }
+        )
+    }
+
+
+}
+
+
+@SuppressLint("NewApi")
+@Composable
+fun GIFAnimation(
+    modifier: Modifier = Modifier,
+    gifResourceId: Int
+) {
+    val context = LocalContext.current
+    var animatedDrawable by remember { mutableStateOf<AnimatedImageDrawable?>(null) }
+
+
+    LaunchedEffect(Unit) {
+        val drawable: Drawable? = ResourcesCompat.getDrawable(context.resources, gifResourceId, null)
+        if (drawable is AnimatedImageDrawable) {
+            animatedDrawable = drawable
+            drawable.start()
+        }
+
+    }
+
+
+    Canvas(modifier = modifier) {
+        animatedDrawable?.draw(drawContext.canvas.nativeCanvas)
+    }
+}
+
+
+@Composable
+fun RollingAnimation() {
+    GIFAnimation(
+        gifResourceId = R.drawable.rolling_animation,
+        modifier = Modifier.size(220.dp).padding(start = 30.dp, top = 35.dp)
+    )
+}
+
+
+private fun playRollingSound(context: Context) {
+    val rollingSound:MediaPlayer?= MediaPlayer.create(context,R.raw.rolling_sound)
+    rollingSound?.start()
+
+    rollingSound?.setOnCompletionListener {
+        it.release()
+    }
+
+}
+
+
+
+
