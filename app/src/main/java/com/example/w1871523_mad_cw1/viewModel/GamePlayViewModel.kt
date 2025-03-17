@@ -1,7 +1,7 @@
 package com.example.w1871523_mad_cw1.viewModel
 
+
 import android.content.Context
-import android.content.res.Configuration
 import android.media.MediaPlayer
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -10,14 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.w1871523_mad_cw1.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 
 class GamePlayViewModel : ViewModel() {
@@ -32,12 +27,18 @@ class GamePlayViewModel : ViewModel() {
     private var _showSelection = mutableStateOf(false)
     private var _showDice = mutableStateOf(false)
     private var _showAnimation = mutableStateOf(false)
-    private var _buttonName= mutableStateOf("Throw")
+    private var _buttonName = mutableStateOf("Throw")
+    private var _showWinner = mutableStateOf(false)
+    private var _showScoreButton = mutableStateOf(false)
+    private var _showThrowButton = mutableStateOf(true)
+    private var _isGameFinished = mutableStateOf(false)
 
 
     private var _availablePlayerReRoll: Int = 2
     private var _availableComputerReRoll: Int = 2
-    private var _computerFirstThrow = true
+    private var reRollCounter=0
+    private val _rollingSound: Int = R.raw.rolling_sound
+
 
     val playerDiceValues: State<List<Int>> = _playerDiceValues
     val computerDiceValues: State<List<Int>> = _computerDiceValues
@@ -51,6 +52,10 @@ class GamePlayViewModel : ViewModel() {
     val showDice: State<Boolean> = _showDice
     val showAnimation: State<Boolean> = _showAnimation
     val buttonName: State<String> = _buttonName
+    val showWinner: State<Boolean> = _showWinner
+    val showScoreButton: State<Boolean> = _showScoreButton
+    val showThrowButton: State<Boolean> = _showThrowButton
+    val isGameFinished: State<Boolean> = _isGameFinished
 
 
     fun selectDice(index: Int) {
@@ -65,8 +70,9 @@ class GamePlayViewModel : ViewModel() {
         _target.intValue = target
     }
 
-
-
+    fun setShowWinner(enable: Boolean) {
+        _showWinner.value = enable
+    }
 
     private fun throwPlayerDices() {
         _showDice.value = true
@@ -79,75 +85,65 @@ class GamePlayViewModel : ViewModel() {
         }
 
         _playerSelectedDices.value = emptyList()
-        _showSelection.value = _availablePlayerReRoll > 0
+        _showScoreButton.value = false
 
-        if(_buttonName.value.split(" ")[0] == "Re-Roll"){_availablePlayerReRoll--}
-        _buttonName.value= if(_availablePlayerReRoll >0){"Re-Roll ( ${_availablePlayerReRoll} )"}else{"Throw"}
+        if (_buttonName.value.split(" ")[0] == "Re-Roll") {
+            _availablePlayerReRoll--
+        }
+        if (_availablePlayerReRoll > 0) {
+            _buttonName.value = "Re-Roll ( $_availablePlayerReRoll )"
+        } else {
+            _buttonName.value = "Throw"
+            _showThrowButton.value = false
+        }
+        _showSelection.value = _availablePlayerReRoll > 0
     }
+
+
 
     fun throwDices() {
         _showAnimation.value = true
-
+        _showScoreButton.value = false
 
         viewModelScope.launch {
+            val playerThrowing: Job
+            var computerThrowing: Job? = null
 
-
-            if (_buttonName.value.split(" ")[0] == "Re-Roll"){
-                val playerThrowing = launch {
+            if (_buttonName.value.split(" ")[0] == "Re-Roll") {
+                reRollCounter++
+                playerThrowing = launch {
                     delay(900)// waiting fo animation to finish
                     _showAnimation.value = false
                     throwPlayerDices()
                 }
 
-                playerThrowing.join()
-
-            }else{
-
-               val computerThrowing = launch {
+            } else {
+                reRollCounter=0
+                computerThrowing = launch {
                     delay(900)// waiting fo animation to finish
                     _showAnimation.value = false
                     throwComputerDices()
                 }
 
-                val playerThrowing = launch {
+                playerThrowing = launch {
                     delay(900)// waiting fo animation to finish
                     _showAnimation.value = false
                     throwPlayerDices()
                 }
 
-
-                computerThrowing.join()
-                playerThrowing.join()
-
             }
 
+            computerThrowing?.join()
+            playerThrowing.join()
+            _showScoreButton.value = true
 
-
-
+            if (_availablePlayerReRoll == 0&&reRollCounter==2) {
+                delay(500)
+                scoreTotal()
+                _availablePlayerReRoll--
+            }
         }
 
-
-
-//        viewModelScope.launch {
-//            delay(900)// waiting fo animation to finish
-//            _showAnimation.value = false
-//            val result = viewModelScope.async {
-//                throwComputerDices()
-//            }
-//            result.await()
-//
-//
-//        }
-
-//             viewModelScope.launch {
-//            delay(900)// waiting fo animation to finish
-//            _showAnimation.value = false
-//
-//            val result = viewModelScope.async {
-//
-//                throwPlayerDices()
-//            }
-//        }
     }
 
 
@@ -159,48 +155,66 @@ class GamePlayViewModel : ViewModel() {
         val generateRandomDiceNumbers = generateRandomDiceNumbers()
         _computerDiceValues.value = generateRandomDiceNumbers
 
-
-        //simulate thinking time
-        delay(1500)
-
         //decide whether re-roll or not
         var reRoll = Random.nextBoolean()
 
-
         while (reRoll) {
-
-            //if computer re-rolls
             if (_availableComputerReRoll > 0) {
 
-                // select maximum 4 dices to keep. selecting all the dices to keep is not meaning full for computer player to re roll
+                //simulating processing time
+                delay(1000)
+
                 val randomDiceIndexes: List<Int> =
-                    _computerDiceValues.value.indices.shuffled().take(Random.nextInt(1, 5))
+                    _computerDiceValues.value.indices.shuffled().take(Random.nextInt(1, 6))
 
                 reRollSelectedDice(_computerDiceValues, randomDiceIndexes)
-                _availableComputerReRoll--
 
+                _availableComputerReRoll--
                 reRoll = Random.nextBoolean() // check whether re-roll again or not
 
-                //simulate thinking time
-                delay(1500)
-
-            }else{
+            } else {
                 break
             }
 
         }
 
-        println("computer done")
+
     }
 
     fun scoreTotal() {
         _showSelection.value = false
         _showDice.value = false
         _playerSelectedDices.value = emptyList()
+        _showScoreButton.value = false
+        _showThrowButton.value = true
 
-        _playerScore.intValue = calculateScore(_playerDiceValues.value, _playerScore.intValue)
-        _computerScore.intValue = calculateScore(_computerDiceValues.value, _computerScore.intValue)
+        val calculatedPlayerScore = calculateScore(_playerDiceValues.value, _playerScore.intValue)
+        val calculatedComputerScore =
+            calculateScore(_computerDiceValues.value, _computerScore.intValue)
 
+        _computerScore.intValue = calculatedComputerScore
+        _playerScore.intValue = calculatedPlayerScore
+        _buttonName.value = "Throw"
+
+        if (calculatedPlayerScore >= _target.intValue &&
+            calculatedComputerScore >= _target.intValue &&
+            calculatedPlayerScore == calculatedComputerScore
+        ) {
+            _availablePlayerReRoll = -1
+            _availableComputerReRoll = -1
+
+        } else if (calculatedComputerScore >= _target.intValue && calculatedPlayerScore < calculatedComputerScore) {
+            _showWinner.value = true
+            _isGameFinished.value = true
+            _computerWon.value += 1
+
+
+        } else if (calculatedPlayerScore >= _target.intValue && calculatedComputerScore < calculatedPlayerScore) {
+            _showWinner.value = true
+            _isGameFinished.value = true
+            _playerWon.value += 1
+
+        }
     }
 
     private fun generateRandomDiceNumbers(): MutableList<Int> {
@@ -212,7 +226,7 @@ class GamePlayViewModel : ViewModel() {
     }
 
     private fun calculateScore(diceValues: List<Int>, currentScore: Int): Int {
-        var total: Int = 0
+        var total = 0
 
         for (value in diceValues) {
             total += value
@@ -236,5 +250,9 @@ class GamePlayViewModel : ViewModel() {
         }
     }
 
+    fun playRollingSound(context: Context) {
+        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _rollingSound)
+        rollingSound?.start()
+    }
 
 }

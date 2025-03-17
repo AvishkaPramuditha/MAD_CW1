@@ -1,8 +1,6 @@
 package com.example.w1871523_mad_cw1
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.res.Configuration
 import android.graphics.drawable.AnimatedImageDrawable
 import android.os.Bundle
 
@@ -38,7 +36,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,24 +56,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.w1871523_mad_cw1.viewModel.GamePlayViewModel
-
-////
 import android.graphics.drawable.Drawable
-import android.media.MediaPlayer
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.nativeCanvas
-
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
-import kotlinx.coroutines.delay
-
 
 
 class GamePlayActivity : ComponentActivity() {
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +83,10 @@ class GamePlayActivity : ComponentActivity() {
 @Composable
 fun MainView(viewModel: GamePlayViewModel) {
     SetTarget(viewModel)
-    Box {
+    WinnerAlert(viewModel)
+
+
+    Box(modifier=if(viewModel.showWinner.value){ Modifier.blur(7.dp)}else{Modifier}) {
         Image(
             painter = painterResource(id = R.drawable.play_background),
             contentDescription = "background",
@@ -111,6 +104,10 @@ fun MainView(viewModel: GamePlayViewModel) {
             Rolling(viewModel)
             Spacer(modifier = Modifier.height(30.dp))
             ButtonSection(viewModel)
+        }
+
+        if (viewModel.isGameFinished.value){
+            Box(Modifier.fillMaxSize().background(Color.Transparent).clickable(enabled = false) {})
         }
 
     }
@@ -328,7 +325,9 @@ fun Rolling(viewModel: GamePlayViewModel) {
                 DiceSet(diceImages, viewModel, false)
                 Spacer(modifier = Modifier.height(10.dp))
 
-                if(viewModel.showAnimation.value){RollingAnimation()}else{
+                if (viewModel.showAnimation.value) {
+                    RollingAnimation()
+                } else {
                     Spacer(modifier = Modifier.size(220.dp))
                 }
 
@@ -368,7 +367,6 @@ fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) 
     ) {
 
         for ((index, dice) in diceValues.withIndex()) {
-
             Box(
                 modifier = Modifier
                     .size(55.dp)
@@ -376,7 +374,7 @@ fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) 
                     .border(
                         width = if (user && index in viewModel.playerSelectedDices.value) 4.dp else 0.dp,
                         color = if (user && index in viewModel.playerSelectedDices.value) Color.Green else Color.Transparent,
-                        shape = RoundedCornerShape(15.dp)
+                        shape = RoundedCornerShape(15.dp),
                     )
                     .clickable(enabled = user && viewModel.showSelection.value) {
                         if (index in viewModel.playerSelectedDices.value) {
@@ -403,6 +401,7 @@ fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) 
 
 @Composable
 fun ButtonSection(viewModel: GamePlayViewModel) {
+
     val context = LocalContext.current
     Row(
         modifier = Modifier
@@ -413,8 +412,8 @@ fun ButtonSection(viewModel: GamePlayViewModel) {
 
         ElevatedButton(
             onClick = {
-               // viewModel.throwPlayerDices()
-                playRollingSound(context)
+                // viewModel.throwPlayerDices()
+                viewModel.playRollingSound(context)
                 viewModel.throwDices()
             },
             colors = ButtonDefaults.buttonColors(
@@ -426,8 +425,9 @@ fun ButtonSection(viewModel: GamePlayViewModel) {
                 .width(180.dp),
             elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
             shape = RoundedCornerShape(20.dp),
+            enabled = viewModel.showThrowButton.value
 
-            ) {
+        ) {
 
             Text(
                 text = viewModel.buttonName.value,
@@ -448,7 +448,7 @@ fun ButtonSection(viewModel: GamePlayViewModel) {
                 .width(150.dp),
             elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
             shape = RoundedCornerShape(20.dp),
-            enabled = viewModel.showDice.value && viewModel.playerSelectedDices.value.isEmpty()
+            enabled = viewModel.showScoreButton.value && viewModel.playerSelectedDices.value.isEmpty()
         ) {
 
             Text(
@@ -566,7 +566,8 @@ fun GIFAnimation(
 
 
     LaunchedEffect(Unit) {
-        val drawable: Drawable? = ResourcesCompat.getDrawable(context.resources, gifResourceId, null)
+        val drawable: Drawable? =
+            ResourcesCompat.getDrawable(context.resources, gifResourceId, null)
         if (drawable is AnimatedImageDrawable) {
             animatedDrawable = drawable
             drawable.start()
@@ -585,20 +586,90 @@ fun GIFAnimation(
 fun RollingAnimation() {
     GIFAnimation(
         gifResourceId = R.drawable.rolling_animation,
-        modifier = Modifier.size(220.dp).padding(start = 30.dp, top = 35.dp)
+        modifier = Modifier
+            .size(220.dp)
+            .padding(start = 30.dp, top = 35.dp)
     )
 }
 
 
-private fun playRollingSound(context: Context) {
-    val rollingSound:MediaPlayer?= MediaPlayer.create(context,R.raw.rolling_sound)
-    rollingSound?.start()
+@Composable
+fun WinnerAlert(viewModel: GamePlayViewModel) {
 
-    rollingSound?.setOnCompletionListener {
-        it.release()
+    val images= listOf(
+        R.drawable.you_win,
+        R.drawable.you_lose
+    )
+
+    val playerWin=viewModel.playerScore.value>viewModel.computerScore.value
+
+    if (viewModel.showWinner.value){
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.setShowWinner(false)
+            },
+            title = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id =if (playerWin){images[0]}else{images[1]}),
+                        contentDescription = if (playerWin){"win"}else{"lose"},
+                    )
+                }
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "  Your Score : ${viewModel.playerScore.value}",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold, modifier = Modifier.width(180.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        "  Bot Score   : ${viewModel.computerScore.value}",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold, modifier = Modifier.width(180.dp)
+                    )
+                }
+
+            },
+            confirmButton = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    ElevatedButton(
+                        onClick = {
+                            viewModel.setShowWinner(false)
+                        },
+                        modifier = Modifier
+                            .height(40.dp)
+                            .width(100.dp),
+                        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(if (playerWin){Color(0xFF41B06E)}else{Color(0xFFE52020)})
+
+                    ) {
+                        Text(
+                            "Done",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+            },
+            containerColor = Color.White,
+        )
     }
 
 }
+
+
 
 
 
