@@ -66,8 +66,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.res.ResourcesCompat
 
 
-class GamePlayActivity : ComponentActivity() {
 
+class GamePlayActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,7 +146,7 @@ fun ScoreBoard(viewModel: GamePlayViewModel) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(top = 15.dp, start = 20.dp, bottom = 10.dp),
+                            .padding(top = 15.dp, start = 18.dp, bottom = 10.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
@@ -178,11 +178,18 @@ fun ScoreBoard(viewModel: GamePlayViewModel) {
                         }
 
                         Text(
-                            "You : ${viewModel.playerWon.value}    /    Bot : ${viewModel.computerWon.value}",
+                            "You  : ${viewModel.playerWon.value}",
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            modifier = Modifier.padding(bottom = 18.dp)
+                            modifier = Modifier.width(180.dp)
+                        )
+                        Text(
+                            "Bot   : ${viewModel.computerWon.value}",
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(bottom = 10.dp).width(180.dp)
                         )
                     }
                 }
@@ -561,35 +568,31 @@ fun GIFAnimation(
     modifier: Modifier = Modifier,
     gifResourceId: Int
 ) {
+
+}
+
+
+@SuppressLint("NewApi")
+@Composable
+fun RollingAnimation() {
+
     val context = LocalContext.current
     var animatedDrawable by remember { mutableStateOf<AnimatedImageDrawable?>(null) }
 
-
     LaunchedEffect(Unit) {
         val drawable: Drawable? =
-            ResourcesCompat.getDrawable(context.resources, gifResourceId, null)
+            ResourcesCompat.getDrawable(context.resources, R.drawable.rolling_animation, null)
         if (drawable is AnimatedImageDrawable) {
             animatedDrawable = drawable
             drawable.start()
         }
-
     }
 
-
-    Canvas(modifier = modifier) {
+    Canvas(modifier =Modifier
+        .size(220.dp)
+        .padding(start = 30.dp, top = 35.dp)) {
         animatedDrawable?.draw(drawContext.canvas.nativeCanvas)
     }
-}
-
-
-@Composable
-fun RollingAnimation() {
-    GIFAnimation(
-        gifResourceId = R.drawable.rolling_animation,
-        modifier = Modifier
-            .size(220.dp)
-            .padding(start = 30.dp, top = 35.dp)
-    )
 }
 
 
@@ -602,6 +605,7 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
     )
 
     val playerWin=viewModel.playerScore.value>viewModel.computerScore.value
+    val context= LocalContext.current
 
     if (viewModel.showWinner.value){
         AlertDialog(
@@ -665,6 +669,7 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
             },
             containerColor = Color.White,
         )
+        if(playerWin){viewModel.playWinSound(context)}else{viewModel.playLoseSound(context)}
     }
 
 }

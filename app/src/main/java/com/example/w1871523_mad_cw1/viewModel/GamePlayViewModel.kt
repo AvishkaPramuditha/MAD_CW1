@@ -38,6 +38,8 @@ class GamePlayViewModel : ViewModel() {
     private var _availableComputerReRoll: Int = 2
     private var reRollCounter=0
     private val _rollingSound: Int = R.raw.rolling_sound
+    private val _winSound: Int = R.raw.win_sound
+    private val _loseSound: Int = R.raw.lose_sound
 
 
     val playerDiceValues: State<List<Int>> = _playerDiceValues
@@ -56,7 +58,6 @@ class GamePlayViewModel : ViewModel() {
     val showScoreButton: State<Boolean> = _showScoreButton
     val showThrowButton: State<Boolean> = _showThrowButton
     val isGameFinished: State<Boolean> = _isGameFinished
-
 
     fun selectDice(index: Int) {
         _playerSelectedDices.value += index
@@ -252,6 +253,16 @@ class GamePlayViewModel : ViewModel() {
 
     fun playRollingSound(context: Context) {
         val rollingSound: MediaPlayer? = MediaPlayer.create(context, _rollingSound)
+        rollingSound?.start()
+    }
+
+    fun playWinSound(context: Context) {
+        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _winSound)
+        rollingSound?.start()
+    }
+
+    fun playLoseSound(context: Context) {
+        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _loseSound)
         rollingSound?.start()
     }
 
