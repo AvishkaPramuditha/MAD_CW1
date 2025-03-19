@@ -69,6 +69,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.res.ResourcesCompat
 
 
+private val targetState= mutableStateOf("")
+
 class GamePlayActivity : ComponentActivity() {
 
 
@@ -76,6 +78,7 @@ class GamePlayActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+
             val viewModel: GamePlayViewModel = viewModel()
             val isPortrait =
                 LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
@@ -83,6 +86,18 @@ class GamePlayActivity : ComponentActivity() {
         }
 
     }
+
+     override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("target",targetState.value)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        targetState.value=savedInstanceState.getString("target") ?: "101"
+    }
+
+
 }
 
 @Composable
@@ -104,6 +119,14 @@ fun MainView(viewModel: GamePlayViewModel, isPortrait: Boolean) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+        // get screen with and set dynamic padding
+        val screenWith = LocalConfiguration.current.screenWidthDp.dp
+        val padding = when {
+            screenWith < 320.dp -> 3.dp
+            screenWith < 380.dp -> 5.dp
+            screenWith < 400.dp -> 10.dp
+            else -> 15.dp
+        }
 
         Column(
             modifier = Modifier
@@ -112,7 +135,7 @@ fun MainView(viewModel: GamePlayViewModel, isPortrait: Boolean) {
                         60.dp
                     } else {
                         25.dp
-                    }, end = 15.dp, start = 15.dp
+                    }, end = padding, start = padding, bottom = 5.dp
                 )
                 .fillMaxSize()
         ) {
@@ -565,13 +588,13 @@ fun ButtonSection(viewModel: GamePlayViewModel, isPortrait: Boolean) {
 
 @Composable
 fun SetTarget(viewModel: GamePlayViewModel) {
-    var showAlert: Boolean by remember { mutableStateOf(false) }
-    var target by remember { mutableStateOf("101") }
+    var target by remember { targetState }
+    var validatedTargetInput:Boolean
 
-    if (showAlert) {
+    if (viewModel.showTargetAlert.value) {
         AlertDialog(
             containerColor = Color.White,
-            onDismissRequest = { showAlert = false },
+            onDismissRequest = { },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Set Target", fontSize = 20.sp)
@@ -583,7 +606,6 @@ fun SetTarget(viewModel: GamePlayViewModel) {
                         modifier = Modifier.size(25.dp)
                     )
                 }
-
             },
 
             text = {
@@ -593,12 +615,18 @@ fun SetTarget(viewModel: GamePlayViewModel) {
                 ) {
                     OutlinedTextField(
                         value = target,
-                        onValueChange = { target = it },
+                        onValueChange = {
+                            validatedTargetInput = viewModel.validateTargetInput(it)
+                            if (validatedTargetInput) {
+                                target = it
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(51.dp)
                             .shadow(5.dp, RoundedCornerShape(20.dp)),
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        singleLine = true,
                         colors = TextFieldDefaults.colors(
                             unfocusedTextColor = Color.Black,
                             focusedIndicatorColor = Color(0xFF067EBF),
@@ -610,12 +638,8 @@ fun SetTarget(viewModel: GamePlayViewModel) {
                         textStyle = TextStyle(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-
-
-                            )
+                        ),
                     )
-
-
                 }
             },
             confirmButton = {
@@ -625,8 +649,12 @@ fun SetTarget(viewModel: GamePlayViewModel) {
                 ) {
                     ElevatedButton(
                         onClick = {
-                            viewModel.setTarget(target.toInt())
-                            showAlert = false
+                            validatedTargetInput = viewModel.validateTargetInput(target)
+                            if (validatedTargetInput) {
+                                viewModel.setTarget(target.toInt())
+                                viewModel.setShowTargetAlert(false)
+                                target="101"
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(
                             contentColor = Color.White,

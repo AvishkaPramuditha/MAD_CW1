@@ -29,6 +29,7 @@ class GamePlayViewModel : ViewModel() {
     private var _showAnimation = mutableStateOf(false)
     private var _buttonName = mutableStateOf("Throw")
     private var _showWinner = mutableStateOf(false)
+    private var _showTargetAlert= mutableStateOf(true)
     private var _showScoreButton = mutableStateOf(false)
     private var _showThrowButton = mutableStateOf(true)
     private var _isGameFinished = mutableStateOf(false)
@@ -58,6 +59,7 @@ class GamePlayViewModel : ViewModel() {
     val showScoreButton: State<Boolean> = _showScoreButton
     val showThrowButton: State<Boolean> = _showThrowButton
     val isGameFinished: State<Boolean> = _isGameFinished
+    val showTargetAlert: State<Boolean> = _showTargetAlert
 
     fun selectDice(index: Int) {
         _playerSelectedDices.value += index
@@ -75,6 +77,9 @@ class GamePlayViewModel : ViewModel() {
         _showWinner.value = enable
     }
 
+    fun setShowTargetAlert(enable: Boolean) {
+        _showTargetAlert.value = enable
+    }
     private fun throwPlayerDices() {
         _showDice.value = true
 
@@ -264,6 +269,10 @@ class GamePlayViewModel : ViewModel() {
     fun playLoseSound(context: Context) {
         val rollingSound: MediaPlayer? = MediaPlayer.create(context, _loseSound)
         rollingSound?.start()
+    }
+
+    fun validateTargetInput(input:String):Boolean{
+        return input.matches("^\\d+$".toRegex())
     }
 
 }
