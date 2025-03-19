@@ -3,6 +3,7 @@ package com.example.w1871523_mad_cw1
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -55,10 +56,48 @@ class MainActivity : ComponentActivity() {
 
             MainView(showAlertDialog,isPortrait)
 
+            Log.d("Lifecycle", "onCreate called")
+
         }
 
     }
+
+//    override fun onStart(){
+//        super.onStart()
+//        Log.d("Lifecycle", "onStart called")
+//    }
+//
+//    override fun onResume(){
+//        super.onResume()
+//        Log.d("Lifecycle", "onResume called")
+//    }
+//    override fun onPause(){
+//        super.onPause()
+//        Log.d("Lifecycle", "onPause called")
+//    }
+//    override fun onStop(){
+//        super.onStop()
+//        Log.d("Lifecycle", "onStop called")
+//    }
+//
+//    override fun onRestart(){
+//        super.onRestart()
+//        Log.d("Lifecycle", "onRestart called")
+//    }
+//    override fun onDestroy(){
+//        super.onDestroy()
+//        Log.d("Lifecycle", "onDestroy called")
+//    }
 }
+
+
+
+
+
+
+
+
+
 
 
 @Composable

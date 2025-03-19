@@ -1,6 +1,7 @@
 package com.example.w1871523_mad_cw1
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.drawable.AnimatedImageDrawable
 import android.os.Bundle
 
@@ -59,34 +60,44 @@ import com.example.w1871523_mad_cw1.viewModel.GamePlayViewModel
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.res.ResourcesCompat
 
 
-
 class GamePlayActivity : ComponentActivity() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val viewModel: GamePlayViewModel = viewModel()
-            MainView(viewModel)
+            val isPortrait =
+                LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+            MainView(viewModel, isPortrait)
         }
 
     }
 }
 
 @Composable
-fun MainView(viewModel: GamePlayViewModel) {
+fun MainView(viewModel: GamePlayViewModel, isPortrait: Boolean) {
+
     SetTarget(viewModel)
     WinnerAlert(viewModel)
 
-
-    Box(modifier=if(viewModel.showWinner.value){ Modifier.blur(7.dp)}else{Modifier}) {
+    Box(
+        modifier = if (viewModel.showWinner.value) {
+            Modifier.blur(7.dp)
+        } else {
+            Modifier
+        }
+    ) {
         Image(
             painter = painterResource(id = R.drawable.play_background),
             contentDescription = "background",
@@ -96,18 +107,37 @@ fun MainView(viewModel: GamePlayViewModel) {
 
         Column(
             modifier = Modifier
-                .padding(top = 60.dp, end = 15.dp, start = 15.dp)
+                .padding(
+                    top = if (isPortrait) {
+                        60.dp
+                    } else {
+                        25.dp
+                    }, end = 15.dp, start = 15.dp
+                )
                 .fillMaxSize()
         ) {
-            ScoreBoard(viewModel)
-            Spacer(modifier = Modifier.height(30.dp))
-            Rolling(viewModel)
-            Spacer(modifier = Modifier.height(30.dp))
-            ButtonSection(viewModel)
+            if (isPortrait) {
+                ScoreBoard(viewModel)
+                Spacer(modifier = Modifier.height(30.dp))
+                RollingBoard(viewModel, true)
+                Spacer(modifier = Modifier.height(30.dp))
+                ButtonSection(viewModel, true)
+            } else {
+                ScoreBoardLandscape(viewModel)
+                Spacer(modifier = Modifier.height(10.dp))
+                RollingBoard(viewModel, false)
+                Spacer(modifier = Modifier.height(10.dp))
+                ButtonSection(viewModel, false)
+            }
+
         }
 
-        if (viewModel.isGameFinished.value){
-            Box(Modifier.fillMaxSize().background(Color.Transparent).clickable(enabled = false) {})
+        if (viewModel.isGameFinished.value) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent)
+                    .clickable(enabled = false) {})
         }
 
     }
@@ -139,21 +169,21 @@ fun ScoreBoard(viewModel: GamePlayViewModel) {
                 Card(
                     modifier = Modifier
                         .height(150.dp)
-                        .width(215.dp),
+                        .width(205.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB)),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(top = 15.dp, start = 18.dp, bottom = 10.dp),
+                            .padding(top = 15.dp, start = 15.dp, bottom = 10.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.Start,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 10.dp)
+                                .padding(top = 5.dp)
                         ) {
                             Text(
                                 "Leader Board",
@@ -189,7 +219,9 @@ fun ScoreBoard(viewModel: GamePlayViewModel) {
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            modifier = Modifier.padding(bottom = 10.dp).width(180.dp)
+                            modifier = Modifier
+                                .padding(bottom = 10.dp)
+                                .width(180.dp)
                         )
                     }
                 }
@@ -286,7 +318,7 @@ fun ScoreBoard(viewModel: GamePlayViewModel) {
 }
 
 @Composable
-fun Rolling(viewModel: GamePlayViewModel) {
+fun RollingBoard(viewModel: GamePlayViewModel, isPortrait: Boolean) {
 
     val diceImages = listOf(
         R.drawable.dice1,
@@ -299,7 +331,13 @@ fun Rolling(viewModel: GamePlayViewModel) {
 
     Card(
         modifier = Modifier
-            .height(460.dp)
+            .height(
+                if (isPortrait) {
+                    460.dp
+                } else {
+                    250.dp
+                }
+            )
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.elevatedCardElevation(10.dp)
@@ -308,62 +346,108 @@ fun Rolling(viewModel: GamePlayViewModel) {
             Image(
                 painter = painterResource(id = R.drawable.rolling_background),
                 contentScale = ContentScale.Crop,
-                contentDescription = "rolling background"
+                contentDescription = "rolling background",
+                modifier = Modifier.fillMaxWidth()
             )
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = 10.dp,
-                        bottom = 10.dp,
-                        start = 15.dp,
-                        end = 15.dp
-                    )
-            ) {
-                Text(
-                    "The Opponent",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                DiceSet(diceImages, viewModel, false)
-                Spacer(modifier = Modifier.height(10.dp))
+            if (isPortrait) {
+                Rolling(diceImages, viewModel, true)
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            top = 5.dp,
+                            bottom = 5.dp,
+                            start = 15.dp,
+                            end = 15.dp
+                        )
+                ) {
+                    Rolling(diceImages, viewModel, false)
 
-                if (viewModel.showAnimation.value) {
-                    RollingAnimation()
-                } else {
-                    Spacer(modifier = Modifier.size(220.dp))
+                    if (viewModel.showAnimation.value) {
+                        RollingAnimation()
+                        Spacer(modifier = Modifier.width(30.dp))
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    if (viewModel.showSelection.value) "Select Dice To Keep" else "",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color(0xFFEEEDEB)
-                )
-
-                Spacer(modifier = Modifier.height(5.dp))
-                DiceSet(diceImages, viewModel, true)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    "You",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
             }
-
         }
     }
 }
 
 
 @Composable
-fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) {
+fun Rolling(diceImages: List<Int>, viewModel: GamePlayViewModel, isPortrait: Boolean) {
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = if (isPortrait) {
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    top = 10.dp,
+                    bottom = 10.dp,
+                    start = 15.dp,
+                    end = 15.dp
+                )
+        } else {
+            Modifier
+                .width(500.dp)
+                .fillMaxHeight()
+        }
+    ) {
+        ///---------------
+        Text(
+            "The Opponent",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        DiceSet(diceImages, viewModel, false, isPortrait)
+
+        if (isPortrait) {
+            Spacer(modifier = Modifier.height(10.dp))//*****************
+
+            if (viewModel.showAnimation.value) {
+                RollingAnimation()
+            } else {
+                Spacer(modifier = Modifier.size(220.dp))
+            }
+            Spacer(modifier = Modifier.height(10.dp))//*********************
+        } else {
+            Spacer(modifier = Modifier.height(50.dp))
+        }
+
+
+        Text(
+            if (viewModel.showSelection.value) "Select Dice To Keep" else "",
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            color = Color(0xFFEEEDEB)
+        )
+
+        Spacer(modifier = Modifier.height(5.dp))
+        DiceSet(diceImages, viewModel, true, isPortrait)
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            "You",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        ///----------------
+    }
+}
+
+@Composable
+fun DiceSet(
+    diceImages: List<Int>,
+    viewModel: GamePlayViewModel,
+    user: Boolean,
+    isPortrait: Boolean
+) {
     val diceValues =
         if (user) viewModel.playerDiceValues.value else viewModel.computerDiceValues.value
 
@@ -376,7 +460,13 @@ fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) 
         for ((index, dice) in diceValues.withIndex()) {
             Box(
                 modifier = Modifier
-                    .size(55.dp)
+                    .size(
+                        if (isPortrait) {
+                            55.dp
+                        } else {
+                            50.dp
+                        }
+                    )
                     .clip(RoundedCornerShape(15.dp))
                     .border(
                         width = if (user && index in viewModel.playerSelectedDices.value) 4.dp else 0.dp,
@@ -406,20 +496,24 @@ fun DiceSet(diceImages: List<Int>, viewModel: GamePlayViewModel, user: Boolean) 
     }
 }
 
+
 @Composable
-fun ButtonSection(viewModel: GamePlayViewModel) {
+fun ButtonSection(viewModel: GamePlayViewModel, isPortrait: Boolean) {
 
     val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = if (isPortrait) {
+            Arrangement.SpaceBetween
+        } else {
+            Arrangement.SpaceAround
+        }
     ) {
 
         ElevatedButton(
             onClick = {
-                // viewModel.throwPlayerDices()
                 viewModel.playRollingSound(context)
                 viewModel.throwDices()
             },
@@ -561,17 +655,6 @@ fun SetTarget(viewModel: GamePlayViewModel) {
 
 }
 
-
-@SuppressLint("NewApi")
-@Composable
-fun GIFAnimation(
-    modifier: Modifier = Modifier,
-    gifResourceId: Int
-) {
-
-}
-
-
 @SuppressLint("NewApi")
 @Composable
 fun RollingAnimation() {
@@ -588,26 +671,27 @@ fun RollingAnimation() {
         }
     }
 
-    Canvas(modifier =Modifier
-        .size(220.dp)
-        .padding(start = 30.dp, top = 35.dp)) {
+    Canvas(
+        modifier = Modifier
+            .size(220.dp)
+            .padding(start = 30.dp, top = 35.dp)
+    ) {
         animatedDrawable?.draw(drawContext.canvas.nativeCanvas)
     }
 }
 
-
 @Composable
 fun WinnerAlert(viewModel: GamePlayViewModel) {
 
-    val images= listOf(
+    val images = listOf(
         R.drawable.you_win,
         R.drawable.you_lose
     )
 
-    val playerWin=viewModel.playerScore.value>viewModel.computerScore.value
-    val context= LocalContext.current
+    val playerWin = viewModel.playerScore.value > viewModel.computerScore.value
+    val context = LocalContext.current
 
-    if (viewModel.showWinner.value){
+    if (viewModel.showWinner.value) {
         AlertDialog(
             onDismissRequest = {
                 viewModel.setShowWinner(false)
@@ -620,8 +704,18 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
                         .height(120.dp)
                 ) {
                     Image(
-                        painter = painterResource(id =if (playerWin){images[0]}else{images[1]}),
-                        contentDescription = if (playerWin){"win"}else{"lose"},
+                        painter = painterResource(
+                            id = if (playerWin) {
+                                images[0]
+                            } else {
+                                images[1]
+                            }
+                        ),
+                        contentDescription = if (playerWin) {
+                            "win"
+                        } else {
+                            "lose"
+                        },
                     )
                 }
             },
@@ -645,7 +739,10 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
 
             },
             confirmButton = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     ElevatedButton(
                         onClick = {
                             viewModel.setShowWinner(false)
@@ -655,7 +752,13 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
                             .width(100.dp),
                         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
                         shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(if (playerWin){Color(0xFF41B06E)}else{Color(0xFFE52020)})
+                        colors = ButtonDefaults.buttonColors(
+                            if (playerWin) {
+                                Color(0xFF41B06E)
+                            } else {
+                                Color(0xFFE52020)
+                            }
+                        )
 
                     ) {
                         Text(
@@ -669,13 +772,173 @@ fun WinnerAlert(viewModel: GamePlayViewModel) {
             },
             containerColor = Color.White,
         )
-        if(playerWin){viewModel.playWinSound(context)}else{viewModel.playLoseSound(context)}
+        if (playerWin) {
+            viewModel.playWinSound(context)
+        } else {
+            viewModel.playLoseSound(context)
+        }
     }
 
 }
 
 
+// Landscape Composable Components
+@Composable
+fun ScoreBoardLandscape(viewModel: GamePlayViewModel) {
+    Card(
+        modifier = Modifier
+            .height(50.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp), elevation = CardDefaults.elevatedCardElevation(10.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.scoreboard_background),
+                contentDescription = "Scoreboard Background",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .padding(top = 5.dp, start = 5.dp, end = 5.dp)
+                    .fillMaxSize()
+            ) {
+                Card(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(305.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB)),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 6.dp, top = 6.dp, end = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+
+                    ) {
+
+                        Image(
+                            painter = painterResource(id = R.drawable.fire),
+                            contentDescription = "Scoreboard Background",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(25.dp)
+
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "You  : ${viewModel.playerWon.value}",
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 23.sp,
+                            modifier = Modifier.width(120.dp)
+                        )
+
+                        Text(
+                            " /  ",
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 23.sp,
+                            modifier = Modifier.width(15.dp)
+                        )
+                        Text(
+                            "Bot   : ${viewModel.computerWon.value}",
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 23.sp,
+                            modifier = Modifier.width(121.dp)
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .width(95.dp)
+                        .height(40.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFDADA))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 8.dp, top = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.target_icon),
+                            contentDescription = "target",
+                            tint = Color.Red,
+                            modifier = Modifier.size(25.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            "${viewModel.target.value}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 23.sp
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(235.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB)),
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 5.dp, end = 5.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .width(105.dp)
+                                .fillMaxHeight()
+
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Human",
+                                modifier = Modifier.size(30.dp),
+                                tint = Color(0xFF01497C)
+                            )
+                            Text(
+                                ": ${viewModel.playerScore.value}", fontSize = 23.sp,
+                                fontWeight = FontWeight.Bold,
+
+                                )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .width(110.dp)
+                                .fillMaxHeight()
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.monitor_icon),
+                                contentDescription = "Computer",
+                                colorFilter = ColorFilter.tint(Color(0xFF01497C)),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(38.dp)
+                            )
+                            Text(
+                                ": ${viewModel.computerScore.value}", fontSize = 23.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
+                    }
+                }
 
 
+            }
+
+
+        }
+    }
+}
 
 
