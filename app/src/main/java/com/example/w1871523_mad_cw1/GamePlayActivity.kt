@@ -69,7 +69,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.res.ResourcesCompat
 
 
-private val targetState= mutableStateOf("")
+private val targetState= mutableStateOf("101")
 
 class GamePlayActivity : ComponentActivity() {
 

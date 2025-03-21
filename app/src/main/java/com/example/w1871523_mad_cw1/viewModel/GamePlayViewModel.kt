@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.w1871523_mad_cw1.R
+import com.example.w1871523_mad_cw1.ScoreData
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -41,6 +42,9 @@ class GamePlayViewModel : ViewModel() {
     private val _rollingSound: Int = R.raw.rolling_sound
     private val _winSound: Int = R.raw.win_sound
     private val _loseSound: Int = R.raw.lose_sound
+    private var rollingSound: MediaPlayer? = null
+    private var playerWinSound: MediaPlayer? = null
+    private var playerLoseSound: MediaPlayer? = null
 
 
     val playerDiceValues: State<List<Int>> = _playerDiceValues
@@ -80,6 +84,14 @@ class GamePlayViewModel : ViewModel() {
     fun setShowTargetAlert(enable: Boolean) {
         _showTargetAlert.value = enable
     }
+
+
+    init {
+        _playerWon.intValue=ScoreData.humanPlayerScore
+        _computerWon.intValue=ScoreData.computerPlayerScore
+    }
+
+
     private fun throwPlayerDices() {
         _showDice.value = true
 
@@ -149,7 +161,6 @@ class GamePlayViewModel : ViewModel() {
                 _availablePlayerReRoll--
             }
         }
-
     }
 
 
@@ -213,13 +224,14 @@ class GamePlayViewModel : ViewModel() {
             _showWinner.value = true
             _isGameFinished.value = true
             _computerWon.value += 1
+            ScoreData.setComputerPlayerScore(_computerWon.intValue)
 
 
         } else if (calculatedPlayerScore >= _target.intValue && calculatedComputerScore < calculatedPlayerScore) {
             _showWinner.value = true
             _isGameFinished.value = true
             _playerWon.value += 1
-
+            ScoreData.setHumanPlayerScore(_playerWon.intValue)
         }
     }
 
@@ -256,23 +268,30 @@ class GamePlayViewModel : ViewModel() {
         }
     }
 
-    fun playRollingSound(context: Context) {
-        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _rollingSound)
-        rollingSound?.start()
-    }
-
-    fun playWinSound(context: Context) {
-        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _winSound)
-        rollingSound?.start()
-    }
-
-    fun playLoseSound(context: Context) {
-        val rollingSound: MediaPlayer? = MediaPlayer.create(context, _loseSound)
-        rollingSound?.start()
-    }
-
     fun validateTargetInput(input:String):Boolean{
         return input.matches("^\\d+$".toRegex())
     }
 
+    fun playRollingSound(context: Context) {
+        rollingSound = MediaPlayer.create(context, _rollingSound)
+        rollingSound?.start()
+    }
+
+    fun playWinSound(context: Context) {
+        playerWinSound = MediaPlayer.create(context, _winSound)
+        playerWinSound?.start()
+    }
+
+    fun playLoseSound(context: Context) {
+        playerLoseSound = MediaPlayer.create(context, _loseSound)
+        playerLoseSound?.start()
+    }
+
+
+    override fun onCleared() {
+        super.onCleared()
+        rollingSound?.release()
+        playerWinSound?.release()
+        playerLoseSound?.release()
+    }
 }
