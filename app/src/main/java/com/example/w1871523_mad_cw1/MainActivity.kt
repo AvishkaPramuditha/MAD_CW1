@@ -62,32 +62,24 @@ class MainActivity : ComponentActivity() {
 
     }
 
-//    override fun onStart(){
-//        super.onStart()
-//        Log.d("Lifecycle", "onStart called")
-//    }
-//
-//    override fun onResume(){
-//        super.onResume()
-//        Log.d("Lifecycle", "onResume called")
-//    }
-//    override fun onPause(){
-//        super.onPause()
-//        Log.d("Lifecycle", "onPause called")
-//    }
-//    override fun onStop(){
-//        super.onStop()
-//        Log.d("Lifecycle", "onStop called")
-//    }
-//
-//    override fun onRestart(){
-//        super.onRestart()
-//        Log.d("Lifecycle", "onRestart called")
-//    }
-//    override fun onDestroy(){
-//        super.onDestroy()
-//        Log.d("Lifecycle", "onDestroy called")
-//    }
+    // store game win static in memory
+    companion object{
+        private var _humanPlayerScore = 0
+        private var _computerPlayerScore = 0
+
+        val humanPlayerScore: Int get() = _humanPlayerScore
+        val computerPlayerScore: Int get() = _computerPlayerScore
+
+
+        fun setHumanPlayerScore(score: Int) {
+            _humanPlayerScore = score
+        }
+
+        fun setComputerPlayerScore(score: Int) {
+            _computerPlayerScore = score
+        }
+    }
+
 }
 
 
