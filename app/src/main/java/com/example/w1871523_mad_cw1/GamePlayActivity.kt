@@ -654,7 +654,10 @@ class GamePlayActivity : ComponentActivity() {
             }
             ElevatedButton(
                 onClick = {
-                    scoreTotal()
+                    rememberCoroutineScope.launch {
+                        scoreTotal()
+                    }
+
                 }, colors = ButtonDefaults.buttonColors(
                     contentColor = Color.White,
                     containerColor = Color(0xFF067EBF)
@@ -1092,6 +1095,7 @@ class GamePlayActivity : ComponentActivity() {
 
 
     private suspend fun throwDices() {
+
         showAnimation.value = true
         showScoreButton.value = false
 
@@ -1102,6 +1106,7 @@ class GamePlayActivity : ComponentActivity() {
                 throwPlayerDices()
 
             } else {
+                showDice.value=false// to conform
                 reRollCounter = 0
                 delay(900)// waiting fo animation to finish
                 showAnimation.value = false
@@ -1125,11 +1130,20 @@ class GamePlayActivity : ComponentActivity() {
         computerDiceValues.value = generateRandomDiceNumbers
     }
 
-    private  fun scoreTotal() {
+    private suspend fun scoreTotal() {
         showSelection.value = false
-        showDice.value = false
+        //showDice.value = false
         playerSelectedDices.value = emptyList()
         showScoreButton.value = false
+
+
+
+        if (gameLevel == "Hard"){
+            computerHardLevelReRolling()
+        }else{
+            computerEasyLevelReRolling()
+        }
+
         showThrowButton.value = true
 
         val calculatedPlayerScore = calculateScore(playerDiceValues.value, playerScore.intValue)
@@ -1222,7 +1236,7 @@ class GamePlayActivity : ComponentActivity() {
 
         while (reRoll) {
             if (availableComputerReRoll > 0) {
-                delay(500)
+
 
                 // get random indexes to keep and others will re roll
                 val randomDiceIndexes: List<Int> =
@@ -1230,9 +1244,10 @@ class GamePlayActivity : ComponentActivity() {
 
                 // set rerolled dice set to show
                 reRollSelectedDice(computerDiceValues, randomDiceIndexes)
-
                 availableComputerReRoll--
                 reRoll = Random.nextBoolean() // check whether re-roll again or not
+
+                delay(2000)
             } else {
                 break
             }
@@ -1255,6 +1270,7 @@ class GamePlayActivity : ComponentActivity() {
                     }
                 }
                 availableComputerReRoll--
+
             } else if (availableComputerReRoll > 0 && currentTotal in 15..20) {
                 if (oneCount >= 2 || twoCount >= 2) {
                     for ((index, value) in diceValues.withIndex()) {
@@ -1263,14 +1279,19 @@ class GamePlayActivity : ComponentActivity() {
                         }
                     }
                     availableComputerReRoll--
+
+                }else{
+
+                    break
                 }
 
             } else {
+
                 break
             }
 
             computerDiceValues.value = diceValues
-            delay(1000)
+            delay(2000)
         }
     }
 
