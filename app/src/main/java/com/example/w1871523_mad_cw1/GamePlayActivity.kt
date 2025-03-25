@@ -864,15 +864,15 @@ class GamePlayActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            "  Your Score : ${playerScore.intValue}",
+                            "Human       : ${playerScore.intValue}",
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold, modifier = Modifier.width(180.dp)
+                            fontWeight = FontWeight.Bold, modifier = Modifier.width(250.dp)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            "  Bot Score   : ${computerScore.intValue}",
+                            "Computer  : ${computerScore.intValue}",
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold, modifier = Modifier.width(180.dp)
+                            fontWeight = FontWeight.Bold, modifier = Modifier.width(250.dp)
                         )
                     }
 
@@ -1120,7 +1120,7 @@ class GamePlayActivity : ComponentActivity() {
                 showAnimation.value = false
                 throwPlayerDices()
 
-            } else {
+            }else{
                 showDice.value=false
                 reRollCounter = 0
                 delay(900)// waiting fo animation to finish
