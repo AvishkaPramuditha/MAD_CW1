@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    // store game win static in memory
+    // store game win statics in memory
     companion object {
         private var _humanPlayerScore = 0
         private var _computerPlayerScore = 0
@@ -360,7 +360,6 @@ fun GameMode(showDLevel:MutableState<Boolean>,gameLevel:MutableState<String>) {
                         onClick = {
                                 gameLevel.value=selectedLevel
                                 showDLevel.value = false
-                                selectedLevel="Easy"
                             },
                         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp),
                         colors = ButtonDefaults.buttonColors(
