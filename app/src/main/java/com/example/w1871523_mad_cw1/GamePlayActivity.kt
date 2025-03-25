@@ -144,7 +144,7 @@ class GamePlayActivity : ComponentActivity() {
         outState.putBoolean("showThrowButton", showThrowButton.value)
         outState.putBoolean("isGameFinished", isGameFinished.value)
         outState.putBoolean("showComputerReRoll", showComputerReRoll.value)
-        outState.putIntArray("computerReRolledDice", computerSelectedDices.value.toIntArray())
+        outState.putIntArray("computerSelectedDices", computerSelectedDices.value.toIntArray())
 
         outState.putInt("availablePlayerReRoll", availablePlayerReRoll)
         outState.putInt("availableComputerReRoll", availableComputerReRoll)
@@ -176,7 +176,7 @@ class GamePlayActivity : ComponentActivity() {
         showThrowButton.value=savedInstanceState.getBoolean("showThrowButton")
         isGameFinished.value=savedInstanceState.getBoolean("isGameFinished")
         showComputerReRoll.value=savedInstanceState.getBoolean("showComputerReRoll")
-        computerSelectedDices.value=savedInstanceState.getIntArray("computerReRolledDice")?.toList() ?: emptyList()
+        computerSelectedDices.value=savedInstanceState.getIntArray("computerSelectedDices")?.toList() ?: emptyList()
 
         availablePlayerReRoll=savedInstanceState.getInt("availablePlayerReRoll")
         availableComputerReRoll=savedInstanceState.getInt("availableComputerReRoll")
@@ -1113,7 +1113,6 @@ class GamePlayActivity : ComponentActivity() {
 
         showAnimation.value=true
         showScoreButton.value=false
-        computerSelectedDices.value= emptyList()
 
             if(buttonName.value.split(" ")[0] == "Re-Roll") {
                 reRollCounter++
@@ -1129,6 +1128,7 @@ class GamePlayActivity : ComponentActivity() {
                 throwComputerDices()
                 throwPlayerDices()
             }
+
             if (availablePlayerReRoll == 0 && reRollCounter == 2) {
                 scoreTotal()
                 availablePlayerReRoll--
@@ -1189,6 +1189,7 @@ class GamePlayActivity : ComponentActivity() {
         }
 
         showThrowButton.value = true
+        computerSelectedDices.value=emptyList()
     }
 
     private fun generateRandomDiceNumbers(): MutableList<Int> {
@@ -1255,7 +1256,7 @@ class GamePlayActivity : ComponentActivity() {
 
                 // get random indexes to keep and others will re roll
                 val randomDiceIndexes: List<Int> =
-                    computerDiceValues.value.indices.shuffled().take(Random.nextInt(1, 6))
+                    computerDiceValues.value.indices.shuffled().take(Random.nextInt(1, 5))
 
 
                 computerSelectedDices.value=randomDiceIndexes
@@ -1275,6 +1276,41 @@ class GamePlayActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * implementation of the 12th sub question which is optimum strategy for computer player strategy
+     * computer player can see only current game score of both player
+     * computer player cannot see human player dice values
+     *
+     * STRATEGY
+     * after the initial throw of computer player,
+     * the strategy get the total of the computer player's dice values which are displayed
+     * check whether it is less than  or equal to 15 (half score of maximum score per a throw)
+     * if it is, then the dices which are less than 4 will be replaced the with new random generated numbers between 1-6
+     * if it is not, then check whether the total is in range of 15-20 or not
+     * if total is in range, then check whether there are at least two dice showing a face value of 1 or 2
+     * if there are, then replace the dices which are less than 3 with new random generated numbers between 1-6
+     * otherwise computer will not re-roll the dices
+     *
+     * JUSTIFICATION
+     * This strategy always try to get the total of the computer player's dice values more than half of maximum score per a throw
+     * the strategy will try to get more than 20 by re-rolling lower values
+     * The strategy will always re-roll the dices which have lower values like 1,2,3
+     * Re-rolling a dice which has value 4 to get more value like 5 or 6 is at high risk of getting values less than 4
+     * above 20 is a good score per a throw and re-rolling it increasing the risk of getting lower score less than 20. (High Risk,Not Good)
+     *
+     * ADVANTAGES
+     * always try to get more than 20 by re-rolling lower values
+     * since strategy re-rolls the dices which have lower values like 1,2,3, the maximum loss is 2
+     * avoid the risk by re-rolling the current good score
+     *
+     * DISADVANTAGES
+     * It does not consider the opponent's score. this will help in a tight game
+     *
+     * PERFORMANCE EVALUATION
+     * This strategy perform well by maintaining a low risk.
+     * This is not go for unnecessary re-rolling of the dices.
+     * always try to get a good score whatever current score is.
+     */
     private suspend fun computerHardLevelReRolling(){
         while (true) {
 
