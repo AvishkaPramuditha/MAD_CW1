@@ -89,19 +89,19 @@ class MainActivity : ComponentActivity() {
 
     // store game win statics in memory
     companion object {
-        private var _humanPlayerScore = 0
-        private var _computerPlayerScore = 0
+        private var _humanPlayerHasWon = 0
+        private var _computerPlayerHasWon = 0
 
-        val humanPlayerScore: Int get() = _humanPlayerScore
-        val computerPlayerScore: Int get() = _computerPlayerScore
+        val humanPlayerHasWon: Int get() = _humanPlayerHasWon
+        val computerPlayerHasWon: Int get() = _computerPlayerHasWon
 
 
         fun setHumanPlayerScore(score: Int) {
-            _humanPlayerScore = score
+            _humanPlayerHasWon = score
         }
 
         fun setComputerPlayerScore(score: Int) {
-            _computerPlayerScore = score
+            _computerPlayerHasWon = score
         }
     }
 

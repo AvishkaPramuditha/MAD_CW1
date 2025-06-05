@@ -99,7 +99,7 @@ class GamePlayActivity : ComponentActivity() {
     private var availablePlayerReRoll: Int = 2
     private var availableComputerReRoll: Int = 2
     private var reRollCounter = 0
-    private lateinit var gameLevel:String
+    private lateinit var gameLevel: String
 
     private var rollingSoundPlayer: MediaPlayer? = null
     private var winSoundPlayer: MediaPlayer? = null
@@ -109,14 +109,14 @@ class GamePlayActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        playerWon.intValue=MainActivity.humanPlayerScore
-        computerWon.intValue=MainActivity.computerPlayerScore
-        gameLevel=intent.getStringExtra("gameLevel") ?: "Easy"
+        playerWon.intValue = MainActivity.humanPlayerHasWon
+        computerWon.intValue = MainActivity.computerPlayerHasWon
+        gameLevel = intent.getStringExtra("gameLevel") ?: "Easy"
 
         setContent {
             val isPortrait =
                 LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
-                MainView(isPortrait)
+            MainView(isPortrait)
         }
 
     }
@@ -149,7 +149,7 @@ class GamePlayActivity : ComponentActivity() {
         outState.putInt("availablePlayerReRoll", availablePlayerReRoll)
         outState.putInt("availableComputerReRoll", availableComputerReRoll)
         outState.putInt("reRollCounter", reRollCounter)
-        outState.putString("gameLevel",gameLevel)
+        outState.putString("gameLevel", gameLevel)
 
 
     }
@@ -158,30 +158,34 @@ class GamePlayActivity : ComponentActivity() {
         super.onRestoreInstanceState(savedInstanceState)
         targetState.value = savedInstanceState.getString("targetState") ?: "101"
 
-        playerDiceValues.value= savedInstanceState.getIntArray("playerDiceValues")?.toList() ?: listOf(1, 1, 1, 1, 1)
-        computerDiceValues.value=savedInstanceState.getIntArray("computerDiceValues")?.toList() ?: listOf(1, 1, 1, 1, 1)
-        playerSelectedDices.value=savedInstanceState.getIntArray("playerSelectedDices")?.toList() ?: listOf(1, 1, 1, 1, 1)
-        target.intValue=savedInstanceState.getInt("target")
-        playerScore.intValue=savedInstanceState.getInt("playerScore")
-        computerScore.intValue=savedInstanceState.getInt("computerScore")
-        playerWon.intValue=savedInstanceState.getInt("playerWon")
-        computerWon.intValue=savedInstanceState.getInt("computerWon")
-        showSelection.value=savedInstanceState.getBoolean("showSelection")
-        showDice.value=savedInstanceState.getBoolean("showDice")
-        showAnimation.value=savedInstanceState.getBoolean("showAnimation")
-        buttonName.value=savedInstanceState.getString("buttonName") ?:"Throw"
-        showWinner.value=savedInstanceState.getBoolean("showWinner")
-        showTargetAlert.value=savedInstanceState.getBoolean("showTargetAlert")
-        showScoreButton.value=savedInstanceState.getBoolean("showScoreButton")
-        showThrowButton.value=savedInstanceState.getBoolean("showThrowButton")
-        isGameFinished.value=savedInstanceState.getBoolean("isGameFinished")
-        showComputerReRoll.value=savedInstanceState.getBoolean("showComputerReRoll")
-        computerSelectedDices.value=savedInstanceState.getIntArray("computerSelectedDices")?.toList() ?: emptyList()
+        playerDiceValues.value =
+            savedInstanceState.getIntArray("playerDiceValues")?.toList() ?: listOf(1, 1, 1, 1, 1)
+        computerDiceValues.value =
+            savedInstanceState.getIntArray("computerDiceValues")?.toList() ?: listOf(1, 1, 1, 1, 1)
+        playerSelectedDices.value =
+            savedInstanceState.getIntArray("playerSelectedDices")?.toList() ?: listOf(1, 1, 1, 1, 1)
+        target.intValue = savedInstanceState.getInt("target")
+        playerScore.intValue = savedInstanceState.getInt("playerScore")
+        computerScore.intValue = savedInstanceState.getInt("computerScore")
+        playerWon.intValue = savedInstanceState.getInt("playerWon")
+        computerWon.intValue = savedInstanceState.getInt("computerWon")
+        showSelection.value = savedInstanceState.getBoolean("showSelection")
+        showDice.value = savedInstanceState.getBoolean("showDice")
+        showAnimation.value = savedInstanceState.getBoolean("showAnimation")
+        buttonName.value = savedInstanceState.getString("buttonName") ?: "Throw"
+        showWinner.value = savedInstanceState.getBoolean("showWinner")
+        showTargetAlert.value = savedInstanceState.getBoolean("showTargetAlert")
+        showScoreButton.value = savedInstanceState.getBoolean("showScoreButton")
+        showThrowButton.value = savedInstanceState.getBoolean("showThrowButton")
+        isGameFinished.value = savedInstanceState.getBoolean("isGameFinished")
+        showComputerReRoll.value = savedInstanceState.getBoolean("showComputerReRoll")
+        computerSelectedDices.value =
+            savedInstanceState.getIntArray("computerSelectedDices")?.toList() ?: emptyList()
 
-        availablePlayerReRoll=savedInstanceState.getInt("availablePlayerReRoll")
-        availableComputerReRoll=savedInstanceState.getInt("availableComputerReRoll")
-        reRollCounter=savedInstanceState.getInt("reRollCounter")
-        gameLevel=savedInstanceState.getString("gameLevel") ?: "Easy"
+        availablePlayerReRoll = savedInstanceState.getInt("availablePlayerReRoll")
+        availableComputerReRoll = savedInstanceState.getInt("availableComputerReRoll")
+        reRollCounter = savedInstanceState.getInt("reRollCounter")
+        gameLevel = savedInstanceState.getString("gameLevel") ?: "Easy"
 
     }
 
@@ -525,7 +529,7 @@ class GamePlayActivity : ComponentActivity() {
             )
             Spacer(modifier = Modifier.height(10.dp))
             DiceSet(diceImages, false, isPortrait)
-            if (showComputerReRoll.value){
+            if (showComputerReRoll.value) {
                 Text(
                     "Computer is re-rolling",
                     fontSize = 15.sp,
@@ -540,11 +544,27 @@ class GamePlayActivity : ComponentActivity() {
                 if (showAnimation.value) {
                     RollingAnimation()
                 } else {
-                    Spacer(modifier = Modifier.size(if (showComputerReRoll.value){198.dp}else{220.dp}))
+                    Spacer(
+                        modifier = Modifier.size(
+                            if (showComputerReRoll.value) {
+                                198.dp
+                            } else {
+                                220.dp
+                            }
+                        )
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             } else {
-                Spacer(modifier = Modifier.height(if (showComputerReRoll.value){28.dp}else{50.dp}))
+                Spacer(
+                    modifier = Modifier.height(
+                        if (showComputerReRoll.value) {
+                            28.dp
+                        } else {
+                            50.dp
+                        }
+                    )
+                )
             }
 
 
@@ -595,8 +615,18 @@ class GamePlayActivity : ComponentActivity() {
                         )
                         .clip(RoundedCornerShape(15.dp))
                         .border(
-                            width = if (user && index in playerSelectedDices.value){ 4.dp }else if (!user&& index in computerSelectedDices.value){4.dp}else{ 0.dp},
-                            color = if (user && index in playerSelectedDices.value){Color.Green}else if (!user&& index in computerSelectedDices.value){Color.Green} else Color.Transparent,
+                            width = if (user && index in playerSelectedDices.value) {
+                                4.dp
+                            } else if (!user && index in computerSelectedDices.value) {
+                                4.dp
+                            } else {
+                                0.dp
+                            },
+                            color = if (user && index in playerSelectedDices.value) {
+                                Color.Green
+                            } else if (!user && index in computerSelectedDices.value) {
+                                Color.Green
+                            } else Color.Transparent,
                             shape = RoundedCornerShape(15.dp)
                         )
                         .clickable(enabled = user && showSelection.value) {
@@ -968,11 +998,11 @@ class GamePlayActivity : ComponentActivity() {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                "You  : ${playerWon.intValue}",
+                                "H  : ${playerWon.intValue}",
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 23.sp,
-                                modifier = Modifier.width(120.dp)
+                                modifier = Modifier.width(100.dp)
                             )
 
                             Text(
@@ -983,11 +1013,11 @@ class GamePlayActivity : ComponentActivity() {
                                 modifier = Modifier.width(15.dp)
                             )
                             Text(
-                                "Bot   : ${computerWon.intValue}",
+                                "C   : ${computerWon.intValue}",
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 23.sp,
-                                modifier = Modifier.width(121.dp)
+                                modifier = Modifier.width(110.dp)
                             )
                         }
                     }
@@ -1110,37 +1140,38 @@ class GamePlayActivity : ComponentActivity() {
 
 
     private suspend fun throwDices() {
+        showAnimation.value = true
+        showScoreButton.value = false
 
-        showAnimation.value=true
-        showScoreButton.value=false
 
-            if(buttonName.value.split(" ")[0] == "Re-Roll") {
-                reRollCounter++
-                delay(900)// waiting fo animation to finish
-                showAnimation.value = false
-                throwPlayerDices()
 
-            }else{
-                showDice.value=false
-                reRollCounter = 0
-                delay(900)// waiting fo animation to finish
-                showAnimation.value = false
-                throwComputerDices()
-                throwPlayerDices()
-            }
+        if (buttonName.value.split(" ")[0] == "Re-Roll") {
+            reRollCounter++
+            delay(900)// waiting fo animation to finish
+            showAnimation.value = false
+            throwPlayerDices()
 
-            if (availablePlayerReRoll == 0 && reRollCounter == 2) {
-                scoreTotal()
-                availablePlayerReRoll--
-                showScoreButton.value = false
-            }else{
-                showScoreButton.value = true
-            }
+        } else {
+            showDice.value = false
+            reRollCounter = 0
+            delay(900)// waiting fo animation to finish
+            showAnimation.value = false
+            throwComputerDices()
+            throwPlayerDices()
+        }
+
+        if (availablePlayerReRoll == 0 && reRollCounter == 2) {
+            scoreTotal()
+            availablePlayerReRoll--
+            showScoreButton.value = false
+        } else {
+            showScoreButton.value = true
+        }
 
     }
 
 
-    private  fun throwComputerDices() {
+    private fun throwComputerDices() {
         val generateRandomDiceNumbers = generateRandomDiceNumbers()
         computerDiceValues.value = generateRandomDiceNumbers
     }
@@ -1153,9 +1184,9 @@ class GamePlayActivity : ComponentActivity() {
         showScoreButton.value = false
 
 
-        if (gameLevel == "Hard"){
+        if (gameLevel == "Hard") {
             computerHardLevelReRolling()
-        }else{
+        } else {
             computerEasyLevelReRolling()
         }
 
@@ -1189,7 +1220,7 @@ class GamePlayActivity : ComponentActivity() {
         }
 
         showThrowButton.value = true
-        computerSelectedDices.value=emptyList()
+        computerSelectedDices.value = emptyList()
     }
 
     private fun generateRandomDiceNumbers(): MutableList<Int> {
@@ -1246,20 +1277,20 @@ class GamePlayActivity : ComponentActivity() {
     }
 
 
-    private suspend fun computerEasyLevelReRolling(){
+    private suspend fun computerEasyLevelReRolling() {
         //decide whether re-roll or not
         var reRoll = Random.nextBoolean()
 
         while (reRoll) {
             if (availableComputerReRoll > 0) {
-                showComputerReRoll.value=true
+                showComputerReRoll.value = true
 
                 // get random indexes to keep and others will re roll
                 val randomDiceIndexes: List<Int> =
                     computerDiceValues.value.indices.shuffled().take(Random.nextInt(1, 5))
 
 
-                computerSelectedDices.value=randomDiceIndexes
+                computerSelectedDices.value = randomDiceIndexes
                 delay(1500)
 
                 // re roll others
@@ -1268,7 +1299,7 @@ class GamePlayActivity : ComponentActivity() {
                 availableComputerReRoll--
                 reRoll = Random.nextBoolean() // check whether re-roll again or not
 
-                showComputerReRoll.value=false
+                showComputerReRoll.value = false
             } else {
                 break
             }
@@ -1311,7 +1342,7 @@ class GamePlayActivity : ComponentActivity() {
      * This is not go for unnecessary re-rolling of the dices.
      * always try to get a good score whatever current score is.
      */
-    private suspend fun computerHardLevelReRolling(){
+    private suspend fun computerHardLevelReRolling() {
         while (true) {
 
             val diceValues: MutableList<Int> = computerDiceValues.value.toList().toMutableList()
@@ -1320,13 +1351,13 @@ class GamePlayActivity : ComponentActivity() {
             val twoCount = diceValues.count { it == 2 }
 
             if (availableComputerReRoll > 0 && currentTotal <= 15) {
-                showComputerReRoll.value=true
-                computerSelectedDices.value= listOf(0,1,2,3,4)
+                showComputerReRoll.value = true
+                computerSelectedDices.value = listOf(0, 1, 2, 3, 4)
 
                 for ((index, value) in diceValues.withIndex()) {
                     if (value < 4) {
                         diceValues[index] = Random.nextInt(1, 7)
-                        computerSelectedDices.value-=index
+                        computerSelectedDices.value -= index
                     }
                 }
                 availableComputerReRoll--
@@ -1334,18 +1365,18 @@ class GamePlayActivity : ComponentActivity() {
             } else if (availableComputerReRoll > 0 && currentTotal in 15..20) {
 
                 if (oneCount >= 2 || twoCount >= 2) {
-                    showComputerReRoll.value=true
-                    computerSelectedDices.value= listOf(0,1,2,3,4)
+                    showComputerReRoll.value = true
+                    computerSelectedDices.value = listOf(0, 1, 2, 3, 4)
 
                     for ((index, value) in diceValues.withIndex()) {
                         if (value < 3) {
                             diceValues[index] = Random.nextInt(1, 7)
-                            computerSelectedDices.value-=index
+                            computerSelectedDices.value -= index
                         }
                     }
                     availableComputerReRoll--
 
-                }else{
+                } else {
 
                     break
                 }
@@ -1356,7 +1387,7 @@ class GamePlayActivity : ComponentActivity() {
             }
             delay(1500)
             computerDiceValues.value = diceValues
-            showComputerReRoll.value=false
+            showComputerReRoll.value = false
         }
     }
 
